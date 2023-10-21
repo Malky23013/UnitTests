@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>  
+   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+    <title>Document</title>
+    <style>
+        input {
+            padding: 10px;
+            font-size: 14px;
+            background-color: aquamarine;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <div id='calendar'></div>
+    <button onclick="getEvents()">Get Events</button>
+    <br>
+    <br>
+    <input id="input1">
+    <input id="input2" type="date">
+
+    <button onclick="addEvent()">Add Event +</button>
+    <br>
+    <br>
+    <button onclick="udpateEvent()">Update Event</button>
+    <br>
+    <br>
+    <button onclick="deleteEvent()">Delete Event</button>
+    <div id="d"></div>
+
+
+    <script>
+        function getEvents() {
+            axios.get("https://localhost:7080/api/Events").then(res => {
+                const events = res.data;
+                renderCalendar(events);
+            });
+        }
+
+        function renderCalendar(events) {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                events: events // Set the events data
+            });
+            calendar.render();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Render the calendar initially with empty events
+            renderCalendar([]);
+
+        });
+        const intervalDuration = 1000;
+
+        const intervalId = setInterval(() => {
+            // Code to update events goes here
+            getEvents();
+        }, intervalDuration);
+
+        function addEvent() {
+            var a1 = document.getElementById('input1').value;
+            var a2 = document.getElementById('input2').value;
+
+            axios.post("https://localhost:7080/api/Events", {
+                "title": a1,
+                "start": a2
+            }).then(res => {
+                console.log(res.data);
+            });
+        }
+
+        function udpateEvent() {
+            var a3 = document.createElement("input");
+            var a4 = document.createElement("input");
+            a3.id = "a3";
+            a4.id = "a4";
+            a4.type = "date";
+            a3.placeholder = "title";
+            a4.placeholder = "date";
+            document.body.appendChild(a3);
+            document.body.appendChild(a4);
+            var listContainer = document.createElement("ul");
+            axios.get("https://localhost:7080/api/Events").then(res => {
+                res.data.forEach((event) => {
+                    var listItem = document.createElement("li");
+                    listItem.textContent = event.title;
+                    listItem.onclick = function () {
+                        var id = event.id; // Assign the proper ID      
+                        axios.put(`https://localhost:7080/api/Events/${id}`, {
+                            "title": a3.value,
+                            "start": a4.value,
+                        }).then(res => {
+                            console.log(res.data);
+                        });
+                    }
+                    listContainer.appendChild(listItem);
+                    // Append the list item to the list container  
+                });
+            }); document.body.appendChild(listContainer);
+
+        }
+
+        function deleteEvent() {
+
+            var listContainer = document.createElement("ul");
+            axios.get("https://localhost:7080/api/Events").then(res => {
+                res.data.forEach((event) => {
+                    var listItem = document.createElement("li");
+                    listItem.textContent = event.title;
+                    listItem.onclick = function (event) {
+                        var id = event.currentTarget.id;
+                        axios.delete(`https://localhost:7080/api/Events/${id}`).then(res => {
+                            // console.log(res.data);
+                        });
+                    };
+                    listItem.id = event.id;
+                    listContainer.appendChild(listItem);
+                });
+            })
+            document.body.appendChild(listContainer);
+
+        }
+
+
+    </script>
+</body>
+
+</html>
